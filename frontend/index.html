@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cortex Regression Watch</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="drawerOverlay" class="drawer-overlay" onclick="handleOverlayClick(event)">
+    <aside class="drawer" id="drawerPanel">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-robot-id" id="drawerRobotId"></div>
+          <div class="drawer-robot-meta" id="drawerRobotMeta"></div>
+        </div>
+        <button class="drawer-close" onclick="closeDrawer()">✕</button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+    </aside>
+  </div>
+
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <div class="logo-mark">CRW</div>
+          <div>
+            <div class="logo-title">Cortex Regression Watch</div>
+            <div class="logo-sub">cortex-v2.7 → v2.8 · rollout analysis</div>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="rollout-status" id="rolloutStatusBadge">loading…</div>
+        <button class="btn-charts" id="generateChartsBtn">Generate Charts</button>
+      </div>
+    </header>
+
+    <div class="blast-callout" id="blastCallout" style="display:none">
+      <div class="blast-icon">⚡</div>
+      <div class="blast-content">
+        <div class="blast-title" id="blastTitle"></div>
+        <div class="blast-text" id="blastText"></div>
+      </div>
+      <div class="blast-action" id="blastAction" onclick="openRollbackModal()" style="cursor:pointer;"></div>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat-item border-accent">
+        <div class="stat-label">Fleet</div>
+        <div class="stat-num accent" id="statTotal">—</div>
+        <div class="stat-sub">robots</div>
+      </div>
+      <div class="stat-item border-green">
+        <div class="stat-label">Healthy</div>
+        <div class="stat-num green" id="statHealthy">—</div>
+        <div class="stat-sub" id="statHealthyPct"></div>
+      </div>
+      <div class="stat-item border-yellow">
+        <div class="stat-label">Degraded</div>
+        <div class="stat-num yellow" id="statDegraded">—</div>
+        <div class="stat-sub">minor drop</div>
+      </div>
+      <div class="stat-item border-orange">
+        <div class="stat-label">Regressed</div>
+        <div class="stat-num orange" id="statRegressed">—</div>
+        <div class="stat-sub">needs watch</div>
+      </div>
+      <div class="stat-item border-red">
+        <div class="stat-label">Failed</div>
+        <div class="stat-num red" id="statFailed">—</div>
+        <div class="stat-sub">critical</div>
+      </div>
+      <div class="stat-item border-muted">
+        <div class="stat-label">Not Updated</div>
+        <div class="stat-num muted" id="statNotUpdated">—</div>
+        <div class="stat-sub">stale policy</div>
+      </div>
+      <div class="stat-item border-red" style="border-left-width:0;border-right:2px solid;padding-right:24px;">
+        <div class="stat-label">Failed Picks/hr</div>
+        <div class="stat-num red" id="statPicksLost">—</div>
+        <div class="stat-sub">blast radius</div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+
+      <div class="panel panel-table">
+        <div class="panel-header">
+          <span class="panel-title">Robot Rollout Results</span>
+          <div class="table-filters">
+            <button class="filter-chip active" onclick="setFilter('ALL', this)">All</button>
+            <button class="filter-chip" onclick="setFilter('FAILED_UPDATE', this)">Failed</button>
+            <button class="filter-chip" onclick="setFilter('REGRESSED', this)">Regressed</button>
+            <button class="filter-chip" onclick="setFilter('NOT_UPDATED', this)">Not Updated</button>
+          </div>
+        </div>
+        <table class="robot-table">
+          <thead>
+            <tr>
+              <th>Robot</th>
+              <th>Site</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th onclick="toggleSort()" style="cursor:pointer;user-select:none;" id="riskHeader">Risk ↓</th>
+              <th>Success Δ</th>
+              <th>Failures</th>
+              <th>Mode</th>
+            </tr>
+          </thead>
+          <tbody id="robotTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="right-col">
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Failure Clusters</span>
+            <span class="panel-hint">by failure mode</span>
+          </div>
+          <div class="failure-cluster-list" id="failureClusterList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Site Risk Summary</span>
+            <span class="panel-hint">sorted by avg risk</span>
+          </div>
+          <div class="site-list" id="siteList"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="panel panel-chart">
+        <div class="panel-header">
+          <span class="panel-title">Risk Score Breakdown</span>
+          <span class="panel-hint">stacked by component — click Generate to render</span>
+        </div>
+        <div class="chart-container">
+          <img id="riskChart" class="chart-img hidden" alt="Risk chart" />
+          <div class="chart-placeholder" id="riskPlaceholder">
+            <span>Click <strong>Generate Charts</strong> to render Matplotlib output</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel panel-chart">
+        <div class="panel-header">
+          <span class="panel-title">Failure Mode × Site Heatmap</span>
+          <span class="panel-hint">robots affected / success drop pp</span>
+        </div>
+        <div class="chart-container">
+          <img id="heatmapChart" class="chart-img hidden" alt="Heatmap" />
+          <div class="chart-placeholder" id="heatmapPlaceholder">
+            <span>Click <strong>Generate Charts</strong> to render Matplotlib output</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="rollbackModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:900;align-items:center;justify-content:center;">
+    <div style="background:#12151a;border:1px solid #e8364f;border-radius:6px;padding:28px 32px;max-width:420px;width:90%;font-family:Consolas,monospace;">
+      <div style="color:#e8364f;font-size:13px;font-weight:700;margin-bottom:10px;">⚡ CONFIRM ROLLBACK</div>
+      <div style="color:#7a8799;font-size:11px;line-height:1.7;margin-bottom:18px;">
+        This will initiate a fleet-wide rollback from <span style="color:#00c8f0">cortex-v2.8</span> to <span style="color:#00d97a">cortex-v2.7</span> across all updated robots.<br><br>
+        Affected sites: bol., Active Ants, BMW, Daimler, Rohlik, Austrian Post<br>
+        Estimated propagation time: 18–40 min (async pull)
+      </div>
+      <div style="font-size:10px;color:#3d4a5c;margin-bottom:20px;" id="rollbackTs"></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="confirmRollback()" style="font-family:Consolas,monospace;font-size:11px;padding:8px 18px;border-radius:3px;border:1px solid #e8364f;background:rgba(232,54,79,0.15);color:#e8364f;cursor:pointer;">Confirm Rollback</button>
+        <button onclick="closeRollbackModal()" style="font-family:Consolas,monospace;font-size:11px;padding:8px 18px;border-radius:3px;border:1px solid #252d3a;background:transparent;color:#7a8799;cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
