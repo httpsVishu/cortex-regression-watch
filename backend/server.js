@@ -15,7 +15,8 @@ app.use(cors({
   origin: [
     "http://localhost:5500",
     "http://127.0.0.1:5500",
-    "https://cortex-regression-watch.vercel.app"  // your actual Vercel URL
+    "https://cortex-regression-watch-demo.vercel.app",
+    "https://cortex-regression-watch-demo-nj1cw9dua-httpsvishus-projects.vercel.app"
   ]
 }));
 app.use(express.json());
