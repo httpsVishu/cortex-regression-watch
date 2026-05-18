@@ -1,4 +1,6 @@
-const API = "http://localhost:5000";
+const API = window.location.hostname === "localhost"
+  ? "http://localhost:5000"
+  : "https://cortex-regression-watch.onrender.com";
 
 let allRobots = [];
 let activeFilter = "ALL";
