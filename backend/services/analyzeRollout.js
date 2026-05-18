@@ -1,3 +1,8 @@
+const config = require("../risk-config.json");
+const W = config.weights;
+const T = config.thresholds;
+const R = config.rollback_rules;
+
 function computeRiskScore(robot) {
   if (!robot.updated) return 50;
 
@@ -7,19 +12,18 @@ function computeRiskScore(robot) {
     ? (robot.before_intervention_rate - robot.after_intervention_rate) / robot.before_intervention_rate
     : 0;
 
-  // Component weights
-  const successComponent   = Math.min(50, Math.max(0, successDrop * 2.8));        // 0–50 pts
-  const failureComponent   = Math.min(30, Math.max(0, (failureMultiplier - 1) * 12)); // 0–30 pts
-  const interventionComp   = Math.min(20, Math.max(0, interventionDrop * 28));     // 0–20 pts
+  const successComponent   = Math.min(W.success_drop_max,   Math.max(0, successDrop * W.success_drop_multiplier));
+  const failureComponent   = Math.min(W.failure_rate_max,   Math.max(0, (failureMultiplier - 1) * W.failure_rate_multiplier));
+  const interventionComp   = Math.min(W.intervention_max,   Math.max(0, interventionDrop * W.intervention_multiplier));
 
   return Math.round(successComponent + failureComponent + interventionComp);
 }
 
 function classifyStatus(score, updated) {
   if (!updated)  return "NOT_UPDATED";
-  if (score >= 75) return "FAILED_UPDATE";
-  if (score >= 40) return "REGRESSED";
-  if (score >= 15) return "DEGRADED";
+  if (score >= T.failed)    return "FAILED_UPDATE";
+  if (score >= T.regressed) return "REGRESSED";
+  if (score >= T.degraded)  return "DEGRADED";
   return "HEALTHY_UPDATE";
 }
 
@@ -135,7 +139,7 @@ function getBlastRadius(robots) {
     affected_sites: [...new Set(failed.map(r => r.site))].length,
     not_updated_robots: notUpdated.length,
     estimated_failed_picks_per_hr: picksImpactPerHr,
-    rollback_recommendation: failed.length >= 3 || picksImpactPerHr > 5000
+    rollback_recommendation: failed.length >= R.auto_rollback_failed_count || picksImpactPerHr > R.auto_rollback_picks_per_hr
       ? "ROLLBACK_ADVISED"
       : failed.length >= 1
         ? "MONITOR_CLOSELY"

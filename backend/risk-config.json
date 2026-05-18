@@ -1,0 +1,19 @@
+{
+  "weights": {
+    "success_drop_max": 50,
+    "success_drop_multiplier": 2.8,
+    "failure_rate_max": 30,
+    "failure_rate_multiplier": 12,
+    "intervention_max": 20,
+    "intervention_multiplier": 28
+  },
+  "thresholds": {
+    "failed": 75,
+    "regressed": 40,
+    "degraded": 15
+  },
+  "rollback_rules": {
+    "auto_rollback_failed_count": 3,
+    "auto_rollback_picks_per_hr": 5000
+  }
+}
