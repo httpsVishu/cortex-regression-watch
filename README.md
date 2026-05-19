@@ -116,7 +116,9 @@ cortex-regression-watch/
 │
 ├── backend/
 │   ├── server.js
+│   ├── package-lock.json
 │   ├── package.json
+│   ├── risk-config.json
 │   ├── data/
 │   │   └── sample-robots.json
 │   ├── services/
@@ -137,10 +139,10 @@ cortex-regression-watch/
 ```
 
 ---
-## Screenshots
-<img width="1903" height="900" alt="image" src="https://github.com/user-attachments/assets/ac79157a-f5a5-4f86-a1aa-60d203caa640" />
-<img width="1900" height="901" alt="image" src="https://github.com/user-attachments/assets/b2c395fc-e6e6-440d-899d-77d0d617dc90" />
+## Live Demo
 
+- Frontend (Vercel): https://cortex-regression-watch-demo.vercel.app
+- Backend API (Render): https://cortex-regression-watch.onrender.com
 ---
 
 ## What this is not
