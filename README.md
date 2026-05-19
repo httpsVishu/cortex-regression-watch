@@ -141,7 +141,7 @@ cortex-regression-watch/
 ---
 ## Live Demo
 
-- Frontend (Vercel): https://cortex-regression-watch-demo.vercel.app
+- Frontend (Vercel): https://cortex-regression-watch.vercel.app
 - Backend API (Render): https://cortex-regression-watch.onrender.com
 ---
 
