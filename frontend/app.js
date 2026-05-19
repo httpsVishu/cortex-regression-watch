@@ -436,5 +436,9 @@ async function init() {
   }
 }
 
-document.getElementById("generateChartsBtn").addEventListener("click", generateCharts);
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+  document.getElementById("generateChartsBtn").style.display = "block";
+  document.getElementById("generateChartsBtn").addEventListener("click", generateCharts);
+}
+
 init();
